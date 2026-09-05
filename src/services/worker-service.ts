@@ -1423,6 +1423,11 @@ async function main() {
 
     case '--daemon':
     default: {
+      const { workerAutostartEnabled, isServiceManagedWorker } = await import('../shared/worker-lifecycle-policy.js');
+      if (!workerAutostartEnabled() && !isServiceManagedWorker()) {
+        logger.info('SYSTEM', 'Worker startup is owned by the external service');
+        process.exit(0);
+      }
       // Duplicate gate, ground truth FIRST (Phase 5): a live worker owns the
       // port — the port cannot be faked by a stale or clobbered file. Exit 0:
       // duplicate suppression is a success, not a failure.

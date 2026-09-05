@@ -11,6 +11,20 @@ import { runShutdownSequence, type ShutdownSequenceOptions, type WorkerShutdownR
 const PORT = 45678;
 const SCRIPT = '/marketplace/plugin/scripts/worker-service.cjs';
 
+it('leaves restart handoff to the external service', async () => {
+  const previous = process.env.CLAUDE_MEM_SERVICE_MANAGED;
+  process.env.CLAUDE_MEM_SERVICE_MANAGED = '1';
+  try {
+    const h = makeHarness({ reason: 'restart' });
+    await runShutdownSequence(h.options);
+    expect(h.counters.graceful).toBe(1);
+    expect(h.counters.spawnDaemon).toBe(0);
+  } finally {
+    if (previous === undefined) delete process.env.CLAUDE_MEM_SERVICE_MANAGED;
+    else process.env.CLAUDE_MEM_SERVICE_MANAGED = previous;
+  }
+});
+
 interface Harness {
   options: ShutdownSequenceOptions;
   guard: { shuttingDown: boolean };

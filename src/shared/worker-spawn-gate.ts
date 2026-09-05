@@ -2,6 +2,7 @@ import { dirname, join } from 'path';
 import { mkdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'fs';
 import { resolveDataDir } from './paths.js';
 import { logger } from '../utils/logger.js';
+import { workerAutostartEnabled } from './worker-lifecycle-policy.js';
 
 /**
  * Cross-launcher spawn lockfile (Phase 4 of
@@ -57,6 +58,7 @@ function getSpawnLockPath(): string {
  * and acquisition is retried exactly once.
  */
 export function acquireSpawnLock(): boolean {
+  if (!workerAutostartEnabled()) return false;
   const lockPath = getSpawnLockPath();
   const payload = JSON.stringify({
     pid: process.pid,

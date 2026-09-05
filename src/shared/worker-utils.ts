@@ -16,6 +16,7 @@ import { checkVersionMatch } from "../services/infrastructure/index.js";
 import { resolveWorkerRuntimePath } from "../services/infrastructure/ProcessManager.js";
 import { acquireSpawnLock, releaseSpawnLock } from "./worker-spawn-gate.js";
 import { killProcessTree } from "./kill-process-tree.js";
+import { workerAutostartEnabled } from './worker-lifecycle-policy.js';
 
 function readTimeoutEnv(
   envName: string,
@@ -452,6 +453,8 @@ async function isWorkerPortAlive(): Promise<boolean> {
 }
 
 export async function ensureWorkerRunning(): Promise<boolean> {
+  // Do not recycle a service-owned worker when an individual client updates.
+  if (!workerAutostartEnabled()) return waitForWorkerReadiness();
   // Resolve ONCE and use the result for both the staleness check and the
   // (re)spawn script below. Detection and spawn sharing this single oracle
   // is what guarantees a mismatch clears in one recycle instead of

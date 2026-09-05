@@ -24,6 +24,7 @@
  */
 
 import { logger } from '../utils/logger.js';
+import { isServiceManagedWorker } from '../shared/worker-lifecycle-policy.js';
 
 /**
  * Closed enum for worker_stopped telemetry. Must stay in sync with the
@@ -131,7 +132,7 @@ export async function runShutdownSequence(options: ShutdownSequenceOptions): Pro
   // stale install would respawn its own version forever (#3378). This runs
   // inside flushResponseThen's flushed action, so it completes before that
   // helper's process.exit(0).
-  if (options.reason !== 'restart') return;
+  if (options.reason !== 'restart' || isServiceManagedWorker()) return;
 
   const handoff = options.restartHandoff;
   try {
